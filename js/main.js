@@ -59,7 +59,7 @@ if (location.hash) {
         }
     } catch (e) {
         console.error(e);
-        updateAlert('The share link is invalid. Using a random shuffle instead', 'warning');
+        updateAlert('The share link provided is invalid. Using a random shuffle instead', 'warning');
         resetShuffle();
     }
 } else {
@@ -87,6 +87,7 @@ $('#speak').click(() => {
     }
     const text = randomPhrase();
     if (text) {
+        $('#alert').addClass('d-none');
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.onend = e => $('#speak').prop('disabled', false);
         utterance.onerror = e => console.error('An error occurred while speaking: ', e);
