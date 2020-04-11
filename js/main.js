@@ -16,7 +16,7 @@ if (!synth) { $('#error').text('Your browser is not supported').removeClass('d-n
 const initVoices = () => {
     const allVoices = synth.getVoices();
     const voices = allVoices.filter(v => v.lang.includes('zh'));
-    if (!voices[0]) { $('error').text('Your browser does not support Chinese text-to-speech'); return; }
+    if (!voices[0]) { $('error').text('Your browser does not include a Chinese text-to-speech voice').removeClass('d-none'); return; }
     voice = voices[0];
 }
 
