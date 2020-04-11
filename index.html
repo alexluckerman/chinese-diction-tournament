@@ -8,15 +8,17 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    <title>Chinese Class Challenge</title>
+    <title>Chinese Diction Tournament</title>
   </head>
   <body class="bg-light">
     <div class="container-fluid text-center py-6">
-      <div id="error" class="d-none alert alert-danger"></div>
-      <h2 class="py-2">Chinese Class Challenge</h2>
+      <div id="alert" class="d-none alert my-2"></div>
+      <h2 class="py-2">Chinese Diction Tournament</h2>
       <!--<textarea class="py-2" id="userText" placeholder="Enter your text here, or enter nothing and shuffle predefined phrases"></textarea>
       <div id="options"></div>-->
       <button id="speak">Play random phrase</button>
+      <button id="challenge">Challenge a friend</button>
+      <p id="share" class="d-none py-3">Link for sharing: <input type="text" id="sharelink"/></p>
     </div>
 
     <footer class="text-center fixed-bottom">
