@@ -11,18 +11,24 @@
     <title>Chinese Diction Tournament</title>
   </head>
   <body class="bg-light">
-    <div class="container-fluid text-center py-6">
+    <div class="container-fluid text-center">
       <div id="alert" class="d-none alert my-2"></div>
-      <h2 class="py-2">Chinese Diction Tournament</h2>
+      <h2 class="pt-4 pb-3">Chinese Diction Tournament</h2>
       <!--<textarea class="py-2" id="userText" placeholder="Enter your text here, or enter nothing and shuffle predefined phrases"></textarea>
       <div id="options"></div>-->
-      <button id="speak" class="btn btn-primary" type="button">Play random phrase</button>
-      <button id="challenge" class="btn btn-primary" type="button">Challenge a friend</button>
+      <button id="speak" class="btn btn-primary m-1" type="button">Play random phrase</button>
+      <button id="challenge" class="btn btn-primary m-1" type="button">Challenge a friend</button>
       <p id="share" class="d-none py-3">Link for sharing: <input type="text" id="sharelink"/></p>
     </div>
 
-    <footer class="text-center fixed-bottom">
-      <p>&copy; Tony and Al Creations 2020</p>
+    <footer class="text-center fixed-bottom dropup my-2">
+      <div class="dropdown">
+        <span>&copy; Tony and Al Creations 2020</span>
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Voice options
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton"></ul>
+      </div>
     </footer>
 
     <!-- Optional JavaScript -->

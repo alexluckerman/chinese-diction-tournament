@@ -26,6 +26,11 @@ const initVoices = () => {
         return;
     }
     voice = voices[0];
+    const dropdownItems = voices.map(v => `<li class="dropdown-item" data-name="${v.name}" href="#">${v.name} (${v.lang})</li>`);
+    $('.dropdown-menu').html(dropdownItems);
+    $('.dropdown-item').click(ev => {
+        voice = voices.find(val => $(ev.target).attr('data-name') === val.name);
+    });
 }
 
 initVoices();
@@ -91,6 +96,7 @@ $('#speak').click(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.onend = e => $('#speak').prop('disabled', false);
         utterance.onerror = e => console.error('An error occurred while speaking: ', e);
+        utterance.voice = voice;
         synth.speak(utterance);
         $('#speak').prop('disabled', true);
     } else {
