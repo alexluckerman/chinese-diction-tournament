@@ -88,9 +88,10 @@ $('#speak').click(() => {
     const text = randomPhrase();
     if (text) {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = e => console.log('Done speaking');
+        utterance.onend = e => $('#speak').prop('disabled', false);
         utterance.onerror = e => console.error('An error occurred while speaking: ', e);
         synth.speak(utterance);
+        $('#speak').prop('disabled', true);
     } else {
         updateAlert('Something went wrong: no phrases are available');
     }
