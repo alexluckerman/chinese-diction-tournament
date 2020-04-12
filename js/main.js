@@ -1,3 +1,5 @@
+"use strict";
+
 // Helpers
 const phrases = [
     '留下',
@@ -32,12 +34,14 @@ class Game {
 
     loadOrderFromHash() {
         try {
-            const hashstring = location.hash.slice(1);
+            const hashstring = location.search.slice(1);
             const providedOrder = hashstring.split('.').map(val => parseInt(val));
             const validater = (acc, val) => acc && val >= 0 && val < phrases.length;
             const validShuffle = providedOrder.reduce(validater, true);
-            if (validShuffle) this.phraseOrder = providedOrder;
-            else throw 'Invalid shuffle provided';
+            if (validShuffle) {
+                this.phraseOrder = providedOrder;
+                updateAlert('Loaded game information from link successfully', 'success')
+            } else throw 'Invalid shuffle provided';
         } catch (err) {
             console.error(err);
             updateAlert('The share link provided is invalid. Using a random shuffle instead', 'warning');
@@ -51,7 +55,7 @@ class Game {
 
     generateRandomPhrase() {
         this.currentPhrase = phrases[this.phraseOrder[this.index++]];
-        if (this.index == phrases.length) {
+        if (this.index === phrases.length) {
             this.reset();
             console.log('Played all phrases, reshuffling and repeating');
             updateAlert('Congrats, you finished all the phrases! The phrases will be reshuffled and started again', 'success');
@@ -63,6 +67,7 @@ class Game {
 const synth = window.speechSynthesis;
 if (!synth) { updateAlert('Your browser does not support text-to-speech', 'danger'); }
 
+let game;
 const initVoices = () => {
     const allVoices = synth.getVoices();
     if (!allVoices[0]) { return; }
@@ -72,7 +77,7 @@ const initVoices = () => {
     } else {
         // Initialize game
         game = new Game(synth, usableVoices[0]);
-        if (location.hash) game.loadOrderFromHash();
+        if (location.search) game.loadOrderFromHash();
         // Generate voices dropdown
         const dropdownItems = usableVoices.map(v => `<li class="dropdown-item" data-name="${v.name}" href="#">${v.name} (${v.lang})</li>`);
         $('.dropdown-menu').html(dropdownItems);
@@ -95,8 +100,8 @@ $('#speak').click(() => {
         $('#alert').addClass('d-none');
         game.generateRandomPhrase();
         const utterance = new SpeechSynthesisUtterance(game.currentPhrase);
-        utterance.onend = e => { $('#speak').prop('disabled', false) };
-        utterance.onerror = e => console.error('An error occurred while speaking: ', e);
+        utterance.onend = () => { $('#speak').prop('disabled', false) };
+        utterance.onerror = err => console.error('An error occurred while speaking: ', err);
         utterance.voice = game.voice;
         synth.speak(utterance);
         $('#speak').prop('disabled', true);
@@ -105,9 +110,8 @@ $('#speak').click(() => {
 
 $('#challenge').click(() => {
     game.reset();
-    location.hash = game.phraseOrder.join('.');
-    $('#sharelink').val(location.href);
+    $('#sharelink').val(location.origin + location.pathname + '?' + game.phraseOrder.join('.'));
     $('#sharelink').click(() => $('#sharelink').select());
     $('#share').removeClass('d-none');
-    updateAlert('Send the link below to a friend so they can hear the same order of phrases and compete with you', 'success');
+    updateAlert('Send the link below to a friend so they can hear the same order of phrases and compete with you', 'primary');
 });
