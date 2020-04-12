@@ -1,3 +1,4 @@
+// Helpers
 const phrases = [
     '留下',
     '点菜',
@@ -13,31 +14,6 @@ const updateAlert = (msg, type) => {
     $('#alert').text(msg).removeClass('d-none alert-success alert-danger alert-warning').addClass(`alert-${type}`);
 }
 
-let voice;
-const synth = window.speechSynthesis;
-if (!synth) { updateAlert('Your browser does not support text-to-speech', 'danger'); }
-
-const initVoices = () => {
-    const allVoices = synth.getVoices();
-    if (!allVoices[0]) { return; }
-    const voices = allVoices.filter(v => v.lang.includes('zh'));
-    if (!voices[0]) {
-        updateAlert('Your browser does not include a Chinese text-to-speech voice', 'danger');
-        return;
-    }
-    voice = voices[0];
-    const dropdownItems = voices.map(v => `<li class="dropdown-item" data-name="${v.name}" href="#">${v.name} (${v.lang})</li>`);
-    $('.dropdown-menu').html(dropdownItems);
-    $('.dropdown-item').click(ev => {
-        voice = voices.find(val => $(ev.target).attr('data-name') === val.name);
-    });
-}
-
-initVoices();
-if (synth.onvoiceschanged !== undefined) {
-    synth.onvoiceschanged = initVoices;
-}
-
 const shuffleIndices = (rawArray) => {
     let array = [...rawArray.keys()];
     for (let i = array.length - 1; i > 0; i--) {
@@ -47,71 +23,91 @@ const shuffleIndices = (rawArray) => {
     return array;
 }
 
-let shuffledIndices;
-let index = 0;
-const resetShuffle = () => { shuffledIndices = shuffleIndices(phrases) };
-if (location.hash) {
-    try {
-        const hashstring = location.hash.slice(1);
-        const order = hashstring.split('.').map(val => parseInt(val));
-        console.log(order);
-        const validate = (acc, val) => acc && val >= 0 && val < phrases.length;
-        const validShuffle = order.reduce(validate, true);
-        if (validShuffle) {
-            shuffledIndices = order;
-        } else {
-            throw 'Invalid shuffle provided';
+class Game {
+    constructor(synth, voice) {
+        this.synth = synth;
+        this.voice = voice;
+        this.reset();
+    }
+
+    loadOrderFromHash() {
+        try {
+            const hashstring = location.hash.slice(1);
+            const providedOrder = hashstring.split('.').map(val => parseInt(val));
+            const validater = (acc, val) => acc && val >= 0 && val < phrases.length;
+            const validShuffle = providedOrder.reduce(validater, true);
+            if (validShuffle) this.phraseOrder = providedOrder;
+            else throw 'Invalid shuffle provided';
+        } catch (err) {
+            console.error(err);
+            updateAlert('The share link provided is invalid. Using a random shuffle instead', 'warning');
         }
-    } catch (e) {
-        console.error(e);
-        updateAlert('The share link provided is invalid. Using a random shuffle instead', 'warning');
-        resetShuffle();
     }
-} else {
-    resetShuffle();
+
+    reset() {
+        this.phraseOrder = shuffleIndices(phrases);
+        this.index = 0;
+    }
+
+    generateRandomPhrase() {
+        this.currentPhrase = phrases[this.phraseOrder[this.index++]];
+        if (this.index == phrases.length) {
+            this.reset();
+            console.log('Played all phrases, reshuffling and repeating');
+            updateAlert('Congrats, you finished all the phrases! The phrases will be reshuffled and started again', 'success');
+        }
+    }
 }
 
-const randomPhrase = () => {
-    if (index == phrases.length) {
-        resetShuffle();
-        index = 0;
-        updateAlert('Congrats, you finished all the phrases! The phrases have been reshuffled and started again', 'success');
-        console.log('Played all phrases, reshuffling and repeating');
+// Initialization
+const synth = window.speechSynthesis;
+if (!synth) { updateAlert('Your browser does not support text-to-speech', 'danger'); }
+
+const initVoices = () => {
+    const allVoices = synth.getVoices();
+    if (!allVoices[0]) { return; }
+    const usableVoices = allVoices.filter(v => v.lang.includes('zh'));
+    if (usableVoices.length == 0) {
+        updateAlert('Your browser does not include a Chinese text-to-speech voice', 'danger');
+    } else {
+        // Initialize game
+        game = new Game(synth, usableVoices[0]);
+        if (location.hash) game.loadOrderFromHash();
+        // Generate voices dropdown
+        const dropdownItems = usableVoices.map(v => `<li class="dropdown-item" data-name="${v.name}" href="#">${v.name} (${v.lang})</li>`);
+        $('.dropdown-menu').html(dropdownItems);
+        $('.dropdown-item').click(ev => {
+            game.voice = usableVoices.find(val => $(ev.target).attr('data-name') === val.name);
+        });
     }
-    return phrases[shuffledIndices[index++]];
 }
 
+initVoices();
+if (synth.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = initVoices;
+}
+
+// Event handlers
 $('#speak').click(() => {
-    if (!voice) {
-        updateAlert('Speaking failed: no voice initialized', 'danger');
-        return;
-    }
-    if (synth.speaking) {
-        console.log('Speak button pressed while already speaking');
-        return;
-    }
-    const text = randomPhrase();
-    if (text) {
+    if (!game.voice) updateAlert('Speaking failed: no voice initialized', 'danger');
+    else if (synth.speaking) console.log('Speak button pressed while already speaking');
+    else {
         $('#alert').addClass('d-none');
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = e => $('#speak').prop('disabled', false);
+        game.generateRandomPhrase();
+        const utterance = new SpeechSynthesisUtterance(game.currentPhrase);
+        utterance.onend = e => { $('#speak').prop('disabled', false) };
         utterance.onerror = e => console.error('An error occurred while speaking: ', e);
-        utterance.voice = voice;
+        utterance.voice = game.voice;
         synth.speak(utterance);
         $('#speak').prop('disabled', true);
-    } else {
-        updateAlert('Something went wrong: no phrases are available');
-    }
+    };
 });
 
 $('#challenge').click(() => {
-    $('#share').removeClass('d-none');
-    shuffledIndices = shuffleIndices(phrases);
-    index = 0;
-    location.hash = shuffledIndices.join('.');
+    game.reset();
+    location.hash = game.phraseOrder.join('.');
     $('#sharelink').val(location.href);
-    location.hash = '';
-    updateAlert('Send the link below to a friend so they can hear the same order of phrases and compete with you', 'success');
     $('#sharelink').click(() => $('#sharelink').select());
+    $('#share').removeClass('d-none');
+    updateAlert('Send the link below to a friend so they can hear the same order of phrases and compete with you', 'success');
 });
-
