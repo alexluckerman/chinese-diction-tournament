@@ -88,6 +88,7 @@ $('#speak').click(() => {
     if (!game.voice) updateAlert('Speaking failed: no voice initialized', 'danger');
     else if (synth.speaking) console.log('Speak button pressed while already speaking');
     else {
+        $('#answer').removeClass('show');
         $('#alert').addClass('d-none');
         game.generateRandomPhrase();
         const utterance = new SpeechSynthesisUtterance(game.currentPhrase);
@@ -96,6 +97,8 @@ $('#speak').click(() => {
         utterance.voice = game.voice;
         synth.speak(utterance);
         $('#speak').prop('disabled', true);
+        
+        $('#answer').text(game.currentPhrase);
     };
 });
 
